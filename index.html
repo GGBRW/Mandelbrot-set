@@ -1,0 +1,90 @@
+<canvas id="c"></canvas>
+<script src="math.js"></script>
+<script>
+    const ctx = c.getContext("2d");
+    c.height = window.innerHeight, c.width = window.innerWidth;
+    
+    document.body.style.margin = 0, document.body.style.overflow = "none";
+    
+    let precision = 256;
+
+    let range = { x: 0, y: 0, r: 1 };
+    
+    function m(x,y) {
+        let c = math.complex(x,y), z = math.complex(0,0);
+        
+        for(var i = 0; i < precision; ++i) {
+            z = math.add(math.multiply(z,z),c);
+
+            if(math.abs(z) > 2) return i;
+        } 
+        return i;
+    }
+
+    function render(rx,ry,rr,pr) {
+        range.x = typeof rx != 'undefined' ? rx : range.x, range.y = typeof ry != 'undefined' ? ry : range.y, range.r = typeof rr != 'undefined' ? rr : range.r;
+        precision = typeof pr != 'undefined' ? pr : precision;
+        x = 0;
+        r();
+    }
+
+    console.log("Mooi: render(-0.6892115349455223,0.3104921577836204,0.018098933348861257,1000)");
+
+    let x = 0;
+    function r() {
+        for(let i = 0; i < 20; ++i) {
+            for (var y = 0; y < c.height; y += 1) {
+                let iterations = m((x / c.height * (range.r * 2)) + (range.x - (c.width / c.height * range.r)), (y / c.height * (range.r * 2)) + (range.y - range.r));
+                if (iterations == precision) {
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(x, y, 1, 1);
+                } else {
+                    let color = Math.round(iterations / precision * 256);
+                    ctx.fillStyle = `rgb(${100 + color * 10},${Math.round(color * 8)},${Math.round(color * 2)})`;
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+            ++x;
+        }
+        if(x < c.width) window.requestAnimationFrame(r);
+    }
+    r();
+
+    let rect = { x: 0, y: 0 }, imageData;
+    c.onmousedown = function(e) { rect.x = e.x, rect.y = e.y; imageData = ctx.getImageData(0,0,c.width,c.height) };
+    c.onmousemove = function(e) {
+        if(e.which == 1) {
+            ctx.putImageData(imageData,0,0);
+            ctx.fillStyle = "rgba(0,0,256,.5)";
+            ctx.fillRect(Math.min(rect.x,e.x),Math.min(rect.y,e.y),Math.abs(e.x - rect.x),Math.abs(e.y - rect.y));
+            ctx.strokeStyle = "blue";
+            ctx.strokeRect(Math.min(rect.x,e.x),Math.min(rect.y,e.y),Math.abs(e.x - rect.x),Math.abs(e.y - rect.y));
+        }
+    }
+    c.onmouseup = function(e) {
+        ctx.putImageData(imageData,0,0);
+        ctx.clearRect(0,0,c.width,c.height);
+        x = 0;
+        //console.log((Math.min(e.x,rect.x) / c.width * (range.r * 2) + (range.x - range.r)) + (Math.max(e.x,rect.x) / c.width * (range.r * 2)) / 2);
+        //console.log((Math.min(e.y,rect.y) / c.height * (range.r * 2) + (range.y - range.r)) + (Math.max(e.y,rect.y) / c.height * (range.r * 2)) / 2);
+        let tx = range.x, ty = range.y;
+        range.x = (Math.min(e.x,rect.x) / c.width * (range.r * 2) + (range.x - range.r)) + (Math.max(e.x,rect.x) / c.width * (range.r * 2)) / 2;
+        range.y = (Math.min(e.y,rect.y) / c.height * (range.r * 2) + (range.y - range.r)) + (Math.max(e.y,rect.y) / c.height * (range.r * 2)) / 2;
+        range.r = Math.max(
+                Math.abs(range.x - (Math.min(e.x,rect.x) / c.height * (range.r * 2) + (tx - range.r))),
+                Math.abs(range.y - (Math.min(e.y,rect.y) / c.height * (range.r * 2) + (ty - range.r)))
+        );
+        console.log(range.x,range.y,range.r);
+        r();
+    }
+</script>
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-63707482-2', 'auto');
+    ga('send', 'pageview');
+
+</script>
